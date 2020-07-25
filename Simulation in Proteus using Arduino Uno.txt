@@ -1,0 +1,119 @@
+#include <SPI.h>       
+#include <SD.h>         
+#include <DHT.h>   
+#include <TinyGPS.h>    
+ 
+File dataFile;
+TinyGPS gps;  //Creates a new instance of the TinyGPS object
+ 
+#define DHTPIN 7          
+#define DHTTYPE DHT11      
+DHT dht(DHTPIN, DHTTYPE);   
+
+float sense_Pin = A0;
+
+#include <DallasTemperature.h>
+#include <OneWire.h>
+#define ONE_WIRE_BUS 9                         
+OneWire oneWire(ONE_WIRE_BUS);
+DallasTemperature sensors(&oneWire);          
+
+ 
+void setup() {
+  dht.begin();
+  sensors.begin();
+  
+  Serial.begin(9600);
+  while (!Serial)
+    
+  Serial.print("Initializing SD card...");
+  if (!SD.begin()) {
+    Serial.println("initialization failed!");
+    while (1);
+  }
+  Serial.println("initialization done.");
+  delay(2000);
+}
+ 
+uint16_t line = 1;
+ 
+void loop() {
+  delay(1000);
+  
+  float RH = dht.readHumidity();
+  float Temp = dht.readTemperature();
+
+  int M = analogRead(sense_Pin)/10;
+
+  sensors.requestTemperatures(); 
+  delay(100);
+  float ST = sensors.getTempCByIndex(0);
+  
+  dataFile = SD.open("FarmLog.txt", FILE_WRITE);
+
+  bool newData = false;
+  unsigned long chars;
+  unsigned short sentences, failed;
+    
+  if (dataFile) {
+    Serial.print(line);
+    Serial.print(":    Temperature = ");
+    Serial.print(Temp);
+    Serial.print(" C,    Humidity = ");
+    Serial.print(RH);
+    Serial.print("%");
+
+    Serial.print("  MOISTURE LEVEL : ");
+    Serial.print(M);
+                 
+    Serial.print("  Soil Temp: ");   
+    Serial.println(ST);   
+
+    for (unsigned long start = millis(); millis() - start < 1000;)
+  {
+    while (Serial.available())
+    {
+      char c = Serial.read();
+      if (gps.encode(c)) 
+        newData = true;  
+    }
+  }
+
+
+    dataFile.print(line++);
+    dataFile.print(":    Temperature = ");
+    dataFile.print(Temp);
+    dataFile.print(" C,    Humidity = ");
+    dataFile.print(RH);
+    dataFile.print("%");
+
+    dataFile.print("  MOISTURE LEVEL : ");
+    dataFile.print(M);
+                 
+    dataFile.print("  Soil Temp: ");
+    dataFile.print(ST);
+
+
+   if (newData)  
+  {
+    float flat, flon;
+    unsigned long age;
+    gps.f_get_position(&flat, &flon, &age);   
+    Serial.print("    Latitude = ");
+    Serial.print(flat == TinyGPS::GPS_INVALID_F_ANGLE ? 0.0 : flat, 6);
+    Serial.print("    Longitude = ");
+    Serial.print(flon == TinyGPS::GPS_INVALID_F_ANGLE ? 0.0 : flon, 6);
+    dataFile.print("    Latitude = ");
+    dataFile.print(flat == TinyGPS::GPS_INVALID_F_ANGLE ? 0.0 : flat, 6);
+    dataFile.print("    Longitude = ");
+    dataFile.println(flon == TinyGPS::GPS_INVALID_F_ANGLE ? 0.0 : flon, 6);
+    
+  }
+  else Serial.println("");
+    
+    dataFile.close();
+    
+  }
+  else
+    Serial.println("error opening FarmLog.txt");
+}
