@@ -1,4 +1,4 @@
-# Code for the Electronic Components
+# Codes for the Electronic Components
 
 Name  : Wijethilake D.L
 
