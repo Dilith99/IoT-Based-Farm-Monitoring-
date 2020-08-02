@@ -1,0 +1,73 @@
+#include "DHT.h"        // including the library of DHT11 temperature and humidity sensor
+#define DHTTYPE DHT11   // DHT 11
+#define dht_dpin D6
+#include <TinyGPS.h>   
+
+DHT dht(dht_dpin, DHTTYPE); 
+TinyGPS gps;  
+
+int sense_Pin = 0; 
+
+
+#include <DallasTemperature.h>
+#include <OneWire.h>
+#define ONE_WIRE_BUS 4                          //D2 pin of nodemcu
+OneWire oneWire(ONE_WIRE_BUS);
+DallasTemperature sensors(&oneWire);            // Pass the oneWire reference to Dallas Temperature.
+
+void setup(void)
+{ 
+  dht.begin();
+  Serial.begin(9600);
+  Serial.println("Farm Monitoring \n\n");
+  Serial.println("==========================================");
+  sensors.begin();
+  delay(700);
+
+}
+void loop() {
+    float h = dht.readHumidity();
+    float t = dht.readTemperature();         
+    Serial.print("Current Humidity = ");
+    Serial.print(dht.readHumidity());
+    Serial.print("%   ||  ");
+    Serial.print("Room Temperature = ");
+    Serial.print(dht.readTemperature()); 
+    Serial.print(" C   || ");
+    
+    Serial.print("MOISTURE LEVEL : ");
+    Serial.print((analogRead(sense_Pin)/10));
+
+    Serial.print("    || ");
+    sensors.requestTemperatures();                // Send the command to get soil temperatures  
+    Serial.print("Temperature is: ");
+    Serial.println(sensors.getTempCByIndex(0));   // Why "byIndex"? You can have more than one IC on the same bus. 0 refers to the first IC on the wire
+
+    bool newData = false;
+    unsigned long chars;
+    unsigned short sentences, failed;
+
+    for (unsigned long start = millis(); millis() - start < 1000;)
+    {
+      while (Serial.available())
+      {
+        char c = Serial.read();
+        //Serial.print(c);
+        if (gps.encode(c)) 
+          newData = true;  
+      }
+    }
+
+   if (newData)      //If newData is true
+    {
+      float flat, flon;
+      unsigned long age;
+      gps.f_get_position(&flat, &flon, &age);   
+      Serial.print("    Latitude = ");
+      Serial.print(flat == TinyGPS::GPS_INVALID_F_ANGLE ? 0.0 : flat, 6);
+      Serial.print("    Longitude = ");
+      Serial.print(flon == TinyGPS::GPS_INVALID_F_ANGLE ? 0.0 : flon, 6);
+    }
+    
+    delay(50000);
+} 
