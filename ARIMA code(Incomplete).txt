@@ -1,0 +1,83 @@
+import pandas as pd
+
+data = pd.read_excel(r'C:\Users\User\Documents\SLIIT\3rd Year\2nd Semester\Design Project 2\Data sets\Colombo_Dataset2.xlsx')
+
+df = pd.DataFrame(data, columns = ['Colombo Temperature [2 m elevation corrected]'])
+
+import numpy as np
+from matplotlib import pyplot as plt
+from statsmodels.tsa.stattools import adfuller 
+from statsmodels.tsa.seasonal import seasonal_decompose 
+from statsmodels.tsa.arima_model import ARIMA
+from pandas.plotting import register_matplotlib_converters
+register_matplotlib_converters()
+
+plt.xlabel('Time')
+plt.ylabel('Temperature')
+plt.plot(df)
+
+result = adfuller(df['Colombo Temperature [2 m elevation corrected]'])
+print('ADF Statistic: {}'.format(result[0]))
+print('p-value: {}'.format(result[1]))
+print('Critical Values:')
+for key, value in result[4].items():
+    print('\t{}: {}'.format(key, value))
+    
+# p - value obtained is 7.45 which is greater than the significance level of 0.05, therefore the series needs to be differenced.
+
+from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
+plt.rcParams.update({'figure.figsize':(9,7), 'figure.dpi':120})
+
+# Original Series
+fig, axes = plt.subplots(3, 2, sharex=True)
+axes[0, 0].plot(df); axes[0, 0].set_title('Original Series')
+plot_acf(df, ax=axes[0, 1])
+
+# 1st Differencing
+axes[1, 0].plot(df.diff()); axes[1, 0].set_title('1st Order Differencing')
+plot_acf(df.diff().dropna(), ax=axes[1, 1])
+
+# 2nd Differencing
+axes[2, 0].plot(df.diff().diff()); axes[2, 0].set_title('2nd Order Differencing')
+plot_acf(df.diff().diff().dropna(), ax=axes[2, 1])
+
+plt.show()
+
+# To identify the no. of AR therm[p], PACF plot is used.
+
+# PACF plot of 1st differenced series
+plt.rcParams.update({'figure.figsize':(9,3), 'figure.dpi':120})
+plot_pacf(df.diff().dropna())
+
+plt.show()
+
+# PACF lag observed as 1. Therefore p is going to be taken as 1
+
+
+# The no.of MA term[q] can be deterimned by uing the ACF plot.
+
+plt.rcParams.update({'figure.figsize':(9,3), 'figure.dpi':120})
+plot_acf(df.diff().dropna())
+
+plt.show()
+
+# q = 1
+
+from statsmodels.tsa.arima_model import ARIMA
+
+# 1,1,1 ARIMA Model
+model = ARIMA(df, order=(2,1,2))
+model_fit = model.fit(disp=0)
+print(model_fit.summary())
+
+# Plot residual errors
+residuals = pd.DataFrame(model_fit.resid)
+fig, ax = plt.subplots(1,2)
+residuals.plot(title="Residuals", ax=ax[0])
+residuals.plot(kind='kde', title='Density', ax=ax[1])
+plt.show()
+residuals.describe()
+
+# Actual vs Fitted
+model_fit.plot_predict(dynamic=False)
+plt.show()
