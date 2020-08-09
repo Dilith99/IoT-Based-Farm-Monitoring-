@@ -17,8 +17,11 @@ The ARIMA model is characterized by the 3 terms which are;
 Using Autocorrelation method(ACF) and Passive Autocorrelation method(PACF), the varibales best for the ARIMA model was identified.
 
 The values obtained was;
+
 d = 1, this value was obtained from the ACF plot 
+
 p = 2, which can be taken by the PACF plot by observing the number of significant lags which are above the signficance level.
+
 q = 2, which tells the number of MA terms needed to remove any correlation terms and this value is found using the PACF plot.
 
 
