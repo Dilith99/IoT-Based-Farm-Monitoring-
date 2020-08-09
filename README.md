@@ -24,4 +24,4 @@ p = 2, which can be taken by the PACF plot by observing the number of significan
 
 q = 2, which tells the number of MA terms needed to remove any correlation terms and this value is found using the PACF plot.
 
-The current code has been uploaded.
+The current python code has been uploaded.
