@@ -6,6 +6,16 @@ EN No.: EN18352054
 
 The codes used for the Electronic Components are available
 
+The electronic omponents used are;
+
+1. NodeMCU - Microcontroller with in-built Wi-Fi chip
+2. DHT11 - Air temperature and humidity sensor
+3. Soil Moisture sensor - Sensing the amount of moisture in the soil
+4. DS18B20 - Temperature sensor probe to measure soil temperature
+5. Neo-6M GPS module - For GPS coordinates, time and date information
+6. TP4056 - Lithium battery charding module
+7. DC USB 0.9V 5V to 5V DC boost step-up module - Powering of the NodeMCU from the mini-USB port
+8. SD card module - To store data to the SD card
 
 # ARIMA model algorithm
 
